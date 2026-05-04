@@ -1,5 +1,18 @@
 #reference "../../BuildArtifacts/temp/_PublishedLibraries/Cake.Prompt/net8.0/Cake.Prompt.dll"
 
+// Note: running this script under cake.tool 6.1.0 emits 6× CS8632
+// warnings ("nullable annotation outside #nullable context") from
+// cake.tool's generated alias-wrapper file. The generator copies the
+// addin's `string?` signatures but doesn't put its synthesized file in
+// nullable context. The warnings are diagnostics-only — the code
+// compiles, the alias calls work, the demo runs correctly.
+//
+// They cannot be silenced from this script: pragma directives here
+// don't reach the generated file, and `#nullable enable` here would
+// only put OUR script under nullable checking (surfacing unrelated
+// warnings in the demo body). Upstream issue against cake-build/cake
+// is queued in workspace TODO.
+
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -109,12 +122,13 @@ Task("Timeout-Fires")
     var origIn = Console.In;
     var origOut = Console.Out;
     var blocking = new BlockingTextReader();
+    var timeout = TimeSpan.FromMilliseconds(500);
+    long elapsedMs;
     try
     {
         Console.SetIn(blocking);
         Console.SetOut(new StringWriter());
 
-        var timeout = TimeSpan.FromMilliseconds(500);
         var sw = Stopwatch.StartNew();
         var threw = false;
 
@@ -128,12 +142,11 @@ Task("Timeout-Fires")
             sw.Stop();
             AssertThat(sw.Elapsed >= timeout, "Timeout fired too early: " + sw.ElapsedMilliseconds + "ms");
             AssertThat(sw.Elapsed < TimeSpan.FromSeconds(5), "Timeout fired too late: " + sw.ElapsedMilliseconds + "ms");
-            Information("TimeoutException fired after {0}ms (timeout was {1}ms)",
-                sw.ElapsedMilliseconds,
-                (int)timeout.TotalMilliseconds);
         }
 
         AssertThat(threw, "Expected TimeoutException to fire on blocked stdin");
+
+        elapsedMs = sw.ElapsedMilliseconds;
     }
     finally
     {
@@ -142,6 +155,11 @@ Task("Timeout-Fires")
         blocking.Release();
     }
 
+    // Log AFTER the finally so Console.Out is restored — otherwise these lines
+    // go to the redirected StringWriter and are silently discarded.
+    Information("TimeoutException fired after {0}ms (timeout was {1}ms)",
+        elapsedMs,
+        (int)timeout.TotalMilliseconds);
     Information("Timeout-Fires OK");
 });
 
