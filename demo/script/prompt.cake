@@ -1,4 +1,4 @@
-#reference "../../BuildArtifacts/temp/_PublishedLibraries/Cake.Prompt/net6.0/Cake.Prompt.dll"
+#reference "../../BuildArtifacts/temp/_PublishedLibraries/Cake.Prompt/net8.0/Cake.Prompt.dll"
 
 using System;
 using System.Diagnostics;
