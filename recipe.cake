@@ -15,8 +15,7 @@ BuildParameters.SetParameters(context: Context,
                               shouldRunCodecov: false,
                               shouldRunInspectCode: false,
                               preferredBuildProviderType: BuildProviderType.GitHubActions,
-                              integrationTestScriptPath: "./prompt.cake",
-                              shouldRunIntegrationTests: true);
+                              integrationTestScriptPath: "./prompt.cake");
 
 BuildParameters.PrintParameters(Context);
 
@@ -25,9 +24,28 @@ ToolSettings.SetToolSettings(context: Context,
                              testCoverageExcludeByAttribute: "*.ExcludeFromCodeCoverage*",
                              testCoverageExcludeByFile: "*/*Designer.cs;*/*.g.cs;*/*.g.i.cs");
 
-// Wire the Group 6 exercise script into the CI quality bar so PRs and
-// fork builds catch regressions before merge. See workspace memory
+// Wire the Group 6 exercise script into both local and CI builds.
+// Cake.Recipe's built-in Run-Integration-Tests task IsDependentOn("Default"),
+// so we can't make Default depend on it without creating a cycle. Instead
+// define a separate Exercise-Script task that depends on Package (so the
+// addin is built + packed first) and chain it from Default and CI so the
+// script runs on every build, not just CI. See workspace memory
 // feedback_recipe_integration_test_wiring.md.
-BuildParameters.Tasks.ContinuousIntegrationTask.IsDependentOn("Run-Integration-Tests");
+Task("Exercise-Script")
+    .IsDependentOn("Package")
+    .Does(() =>
+{
+    CakeExecuteScript(BuildParameters.IntegrationTestScriptPath,
+        new CakeSettings
+        {
+            Arguments = new Dictionary<string, string>
+            {
+                { "verbosity", Context.Log.Verbosity.ToString("F") }
+            }
+        });
+});
+
+BuildParameters.Tasks.DefaultTask.IsDependentOn("Exercise-Script");
+BuildParameters.Tasks.ContinuousIntegrationTask.IsDependentOn("Exercise-Script");
 
 Build.RunDotNetCore();
