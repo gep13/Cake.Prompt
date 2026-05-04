@@ -109,12 +109,13 @@ Task("Timeout-Fires")
     var origIn = Console.In;
     var origOut = Console.Out;
     var blocking = new BlockingTextReader();
+    var timeout = TimeSpan.FromMilliseconds(500);
+    long elapsedMs;
     try
     {
         Console.SetIn(blocking);
         Console.SetOut(new StringWriter());
 
-        var timeout = TimeSpan.FromMilliseconds(500);
         var sw = Stopwatch.StartNew();
         var threw = false;
 
@@ -128,12 +129,11 @@ Task("Timeout-Fires")
             sw.Stop();
             AssertThat(sw.Elapsed >= timeout, "Timeout fired too early: " + sw.ElapsedMilliseconds + "ms");
             AssertThat(sw.Elapsed < TimeSpan.FromSeconds(5), "Timeout fired too late: " + sw.ElapsedMilliseconds + "ms");
-            Information("TimeoutException fired after {0}ms (timeout was {1}ms)",
-                sw.ElapsedMilliseconds,
-                (int)timeout.TotalMilliseconds);
         }
 
         AssertThat(threw, "Expected TimeoutException to fire on blocked stdin");
+
+        elapsedMs = sw.ElapsedMilliseconds;
     }
     finally
     {
@@ -142,6 +142,11 @@ Task("Timeout-Fires")
         blocking.Release();
     }
 
+    // Log AFTER the finally so Console.Out is restored — otherwise these lines
+    // go to the redirected StringWriter and are silently discarded.
+    Information("TimeoutException fired after {0}ms (timeout was {1}ms)",
+        elapsedMs,
+        (int)timeout.TotalMilliseconds);
     Information("Timeout-Fires OK");
 });
 

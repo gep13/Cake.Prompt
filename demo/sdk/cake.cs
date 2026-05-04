@@ -1,6 +1,19 @@
 #!/usr/bin/env dotnet
 #:sdk Cake.Sdk@6.1.0
 #:project ../../src/Cake.Prompt/Cake.Prompt.csproj
+#:property Nullable=enable
+
+// Nullable=enable propagates `<Nullable>enable</Nullable>` to the
+// SDK's synthetic csproj so the addin's `string?` annotations on
+// PromptAliases load in the right context (silences CS8632).
+//
+// NoWarn=CS8603 silences "Possible null reference return" warnings
+// emitted from Cake.Sdk's generated `CakeMethodAliases.g.cs` — the
+// source generator doesn't currently propagate the addin's `?`
+// annotations into the synthesized wrappers, so it reports the
+// nullable returns as suspicious. Not actionable from our code;
+// upstream issue against Cake.Sdk.
+#:property NoWarn=CS8603
 
 // Cake SDK consumer demo for Cake.Prompt. Runs as a file-based
 // .NET program (introduced in .NET 10) using the Cake.Sdk
@@ -68,12 +81,13 @@ Task("Timeout-Fires")
     var origIn = Console.In;
     var origOut = Console.Out;
     var blocking = new BlockingTextReader();
+    var timeout = TimeSpan.FromMilliseconds(500);
+    long elapsedMs;
     try
     {
         Console.SetIn(blocking);
         Console.SetOut(new StringWriter());
 
-        var timeout = TimeSpan.FromMilliseconds(500);
         var sw = Stopwatch.StartNew();
         var threw = false;
 
@@ -87,12 +101,11 @@ Task("Timeout-Fires")
             sw.Stop();
             AssertThat(sw.Elapsed >= timeout, "Timeout fired too early: " + sw.ElapsedMilliseconds + "ms");
             AssertThat(sw.Elapsed < TimeSpan.FromSeconds(5), "Timeout fired too late: " + sw.ElapsedMilliseconds + "ms");
-            Information("TimeoutException fired after {0}ms (timeout was {1}ms)",
-                sw.ElapsedMilliseconds,
-                (int)timeout.TotalMilliseconds);
         }
 
         AssertThat(threw, "Expected TimeoutException to fire on blocked stdin");
+
+        elapsedMs = sw.ElapsedMilliseconds;
     }
     finally
     {
@@ -101,6 +114,11 @@ Task("Timeout-Fires")
         blocking.Release();
     }
 
+    // Log AFTER the finally so Console.Out is restored — otherwise these lines
+    // go to the redirected StringWriter and are silently discarded.
+    Information("TimeoutException fired after {0}ms (timeout was {1}ms)",
+        elapsedMs,
+        (int)timeout.TotalMilliseconds);
     Information("Timeout-Fires OK");
 });
 
