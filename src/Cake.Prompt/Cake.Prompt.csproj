@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
@@ -33,17 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Cake.Core 2.0.0's canonical TFM is netcoreapp3.1, which is EOL and
-         not installable from setup-dotnet anymore. Cake.Prompt 2.0.0 ships
-         net6.0 only — Cake.Core 2.0.0 supports it and cake.tool 2.x runs on
-         net6.0 too. Workspace policy decision (per the per-Cake-major
-         release plan), not a CG-compliant one. -->
-    <CakeContribGuidelinesOmitTargetFramework Include="netcoreapp3.1" />
-    <CakeContribGuidelinesOmitTargetFramework Include="net5.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Cake.Core" Version="2.0.0" PrivateAssets="All" />
+    <PackageReference Include="Cake.Core" Version="3.0.0" PrivateAssets="All" />
     <PackageReference Include="Cake.Addin.Analyzer" Version="0.1.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

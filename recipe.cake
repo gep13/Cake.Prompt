@@ -15,7 +15,7 @@ BuildParameters.SetParameters(context: Context,
                               shouldRunCodecov: false,
                               shouldRunInspectCode: false,
                               preferredBuildProviderType: BuildProviderType.GitHubActions,
-                              integrationTestScriptPath: "./prompt.cake");
+                              integrationTestScriptPath: "./demo/script/prompt.cake");
 
 BuildParameters.PrintParameters(Context);
 
@@ -24,28 +24,19 @@ ToolSettings.SetToolSettings(context: Context,
                              testCoverageExcludeByAttribute: "*.ExcludeFromCodeCoverage*",
                              testCoverageExcludeByFile: "*/*Designer.cs;*/*.g.cs;*/*.g.i.cs");
 
-// Wire the Group 6 exercise script into both local and CI builds.
-// Cake.Recipe's built-in Run-Integration-Tests task IsDependentOn("Default"),
-// so we can't make Default depend on it without creating a cycle. Instead
-// define a separate Exercise-Script task that depends on Package (so the
-// addin is built + packed first) and chain it from Default and CI so the
-// script runs on every build, not just CI. See workspace memory
-// feedback_recipe_integration_test_wiring.md.
-Task("Exercise-Script")
-    .IsDependentOn("Package")
-    .Does(() =>
-{
-    CakeExecuteScript(BuildParameters.IntegrationTestScriptPath,
-        new CakeSettings
-        {
-            Arguments = new Dictionary<string, string>
-            {
-                { "verbosity", Context.Log.Verbosity.ToString("F") }
-            }
-        });
-});
-
-BuildParameters.Tasks.DefaultTask.IsDependentOn("Exercise-Script");
-BuildParameters.Tasks.ContinuousIntegrationTask.IsDependentOn("Exercise-Script");
+// NOTE: no in-recipe Exercise-Script wiring here. Once an addin is on
+// Cake.Core 3.0.0+ there's a chicken-and-egg version-mismatch —
+// Cake.Recipe 4.0.0 pins cake.tool to a Cake-2-era runtime, so
+// CakeExecuteScript inside the recipe can't load a Cake-3-targeted
+// addin DLL (Cake.Common 3 removed DotNetCoreTestSettings; cake.tool
+// 2.3.0 can't see Cake.Core 3.x). Instead the addin is exercised by
+// the demo/{script,frosting} folders — each has its own cake.tool /
+// Cake.Frosting pin matching the addin's Cake major and runs as a
+// separate step in CI after the recipe's DotNetCore-Pack populates
+// _PublishedLibraries.
+//
+// The xunit tests in src/Cake.Prompt.Tests still run in-recipe via
+// the standard Test target — those don't depend on cake.tool's
+// runtime, so coverage is preserved both ways.
 
 Build.RunDotNetCore();
