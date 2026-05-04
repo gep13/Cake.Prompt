@@ -1,5 +1,18 @@
 #reference "../../BuildArtifacts/temp/_PublishedLibraries/Cake.Prompt/net8.0/Cake.Prompt.dll"
 
+// Note: running this script under cake.tool 6.1.0 emits 6× CS8632
+// warnings ("nullable annotation outside #nullable context") from
+// cake.tool's generated alias-wrapper file. The generator copies the
+// addin's `string?` signatures but doesn't put its synthesized file in
+// nullable context. The warnings are diagnostics-only — the code
+// compiles, the alias calls work, the demo runs correctly.
+//
+// They cannot be silenced from this script: pragma directives here
+// don't reach the generated file, and `#nullable enable` here would
+// only put OUR script under nullable checking (surfacing unrelated
+// warnings in the demo body). Upstream issue against cake-build/cake
+// is queued in workspace TODO.
+
 using System;
 using System.Diagnostics;
 using System.IO;
