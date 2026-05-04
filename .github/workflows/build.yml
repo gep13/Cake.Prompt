@@ -75,11 +75,12 @@ jobs:
           cake-version: tool-manifest
 
       # The demo/ folders exercise the just-built addin DLL under
-      # Cake-major-matching cake.tool / Cake.Frosting versions. They run
-      # in their OWN tool/package context (independent of recipe.cake's
-      # cake.tool, which is constrained by Cake.Recipe's runtime). Both
-      # demos consume the addin from BuildArtifacts/temp/_PublishedLibraries/
-      # populated by the recipe Build step above.
+      # Cake-major-matching cake.tool / Cake.Frosting / Cake.Sdk versions.
+      # They run in their OWN tool/package context (independent of
+      # recipe.cake's cake.tool, which is constrained by Cake.Recipe's
+      # runtime). The script + frosting demos consume the addin from
+      # BuildArtifacts/temp/_PublishedLibraries/; the SDK demo builds
+      # the addin from source via #:project.
 
       - name: Run demo/script
         if: success()
@@ -90,6 +91,12 @@ jobs:
         if: success()
         shell: pwsh
         run: ./demo/frosting/build.ps1
+
+      - name: Run demo/sdk
+        if: success()
+        shell: pwsh
+        working-directory: ./demo/sdk
+        run: dotnet cake.cs
 
       - name: Upload Issues-Report
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
