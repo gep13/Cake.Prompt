@@ -1,12 +1,16 @@
-#reference "BuildArtifacts/temp/_PublishedLibraries/Cake.Prompt/net6.0/Cake.Prompt.dll"
+#reference "../../BuildArtifacts/temp/_PublishedLibraries/Cake.Prompt/net6.0/Cake.Prompt.dll"
 
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
 
-// Group 6 exercise script for Cake.Prompt. Runs three checks against
-// the just-built DLL:
+// Cake script consumer demo for Cake.Prompt. Runs under the Cake-major-
+// matching cake.tool pinned by demo/script/.config/dotnet-tools.json
+// (independent of the recipe build's tool, which is constrained by
+// Cake.Recipe's Cake-2 era runtime).
+//
+// Runs three checks against the just-built _PublishedLibraries DLL:
 //
 //   1. Argument validation: zero/negative timeouts throw
 //      ArgumentOutOfRangeException.
