@@ -1,7 +1,15 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Cake.Core;
 using Cake.Core.Annotations;
+
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+// CS8625 fires on the Prompt(message)/Prompt(message, timeout) overloads passing
+// null as defaultResult. The parameter can legitimately be null at runtime, but
+// the public signature stays non-nullable (string, not string?) so cake.tool
+// 2.3.0's Roslyn host can compile #reference'd Cake scripts that consume the
+// addin — the older host doesn't recognise [NullableAttribute] in referenced
+// metadata.
 
 namespace Cake.Common.IO
 {
@@ -28,7 +36,7 @@ namespace Cake.Common.IO
         /// </summary>
         /// <param name="context">The context.</param>
         /// <param name="message">The message which is shown to the user.</param>
-        /// <param name="timeout">Timeout time, defaults to 30 seconds</param>
+        /// <param name="timeout">Timeout time, defaults to 30 seconds.</param>
         /// <returns>The user input.</returns>
         [CakeMethodAlias]
         public static string Prompt(this ICakeContext context, string message, TimeSpan timeout)
@@ -41,7 +49,7 @@ namespace Cake.Common.IO
         /// </summary>
         /// <param name="context">The context.</param>
         /// <param name="message">The message which is shown to the user.</param>
-        /// <param name="defaultResult">Value supplied if the user simply returns with no input</param>
+        /// <param name="defaultResult">Value supplied if the user simply returns with no input.</param>
         /// <returns>The user input.</returns>
         [CakeMethodAlias]
         public static string Prompt(this ICakeContext context, string message, string defaultResult)
@@ -54,19 +62,23 @@ namespace Cake.Common.IO
         /// </summary>
         /// <param name="context">The context.</param>
         /// <param name="message">The message which is shown to the user.</param>
-        /// <param name="defaultResult">Value supplied if the user simply returns with no input</param>
-        /// <param name="timeout">Timeout time, defaults to 30 seconds</param>
+        /// <param name="defaultResult">Value supplied if the user simply returns with no input.</param>
+        /// <param name="timeout">Timeout time, defaults to 30 seconds.</param>
         /// <returns>The user input.</returns>
         [CakeMethodAlias]
         public static string Prompt(this ICakeContext context, string message, string defaultResult, TimeSpan timeout)
         {
             if (context == null)
+            {
                 throw new ArgumentNullException(nameof(context));
+            }
 
             timeout = timeout == default ? TimeSpan.FromSeconds(30) : timeout;
 
             if (timeout <= TimeSpan.Zero)
+            {
                 throw new ArgumentOutOfRangeException(nameof(timeout), "timeout must be greater than zero");
+            }
 
             // Console.ReadLine() is a blocking synchronous call that ignores
             // CancellationToken — it returns only when the user presses Enter
@@ -93,3 +105,5 @@ namespace Cake.Common.IO
         }
     }
 }
+
+#pragma warning restore CS8625
