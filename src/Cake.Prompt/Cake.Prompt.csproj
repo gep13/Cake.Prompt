@@ -1,18 +1,62 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
-	<IsPackable>true</IsPackable>
-    <LangVersion>latest</LangVersion>
-    <Description>Cake Prompt AddIn</Description>
-    <Copyright>Copyright © Yves Schmid 2017</Copyright>
-    <Company />
-    <PackageTags>cake</PackageTags>
-    <PackageProjectUrl>https://github.com/cake-contrib/Cake.Prompt</PackageProjectUrl>
+    <TargetFramework>net6.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="Cake.Core" Version="1.0.0" PrivateAssets="All" />
+
+  <PropertyGroup>
+    <PackageId>Cake.Prompt</PackageId>
+    <Title>Cake.Prompt</Title>
+    <Description>Cake.Prompt is an Addin for Cake which adds prompt-the-user-for-input aliases to a Cake build script, with optional default-result and timeout support.</Description>
+    <Authors>Yves Schmid</Authors>
+    <Owners>cake-contrib</Owners>
+    <Copyright>Copyright © Yves Schmid 2017</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/cake-contrib/Cake.Prompt</PackageProjectUrl>
+    <PackageIconUrl>https://cdn.jsdelivr.net/gh/cake-contrib/graphics/png/cake-contrib-medium.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/cake-contrib/Cake.Prompt.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>cake;cake-build;cake-addin;addin;script;build;prompt;input;timeout</PackageTags>
+    <PackageReleaseNotes>https://github.com/cake-contrib/Cake.Prompt/releases/tag/$(Version)</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>.\Cake.Prompt.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="stylecop.json" />
   </ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' ">
-		<PackageReference Include="Cake.Core" Version="2.0.0" PrivateAssets="All" />
-	</ItemGroup>
+
+  <ItemGroup>
+    <!-- Cake.Core 2.0.0's canonical TFM is netcoreapp3.1, which is EOL and
+         not installable from setup-dotnet anymore. Cake.Prompt 2.0.0 ships
+         net6.0 only — Cake.Core 2.0.0 supports it and cake.tool 2.x runs on
+         net6.0 too. Workspace policy decision (per the per-Cake-major
+         release plan), not a CG-compliant one. -->
+    <CakeContribGuidelinesOmitTargetFramework Include="netcoreapp3.1" />
+    <CakeContribGuidelinesOmitTargetFramework Include="net5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Cake.Core" Version="2.0.0" PrivateAssets="All" />
+    <PackageReference Include="Cake.Addin.Analyzer" Version="0.1.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="CakeContrib.Guidelines" Version="1.7.0" PrivateAssets="All" />
+    <PackageReference Include="IDisposableAnalyzers" Version="4.0.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
 </Project>

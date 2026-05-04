@@ -1,18 +1,42 @@
+## Visual Studio + .NET artifacts
 
 # User-specific files
 *.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+
+# Visual Studio cache/options
+.vs/
 
 # Build results
 [Dd]ebug/
 [Rr]elease/
+[Bb]in/
 [Oo]bj/
+[Ll]og/
+
+# .NET Core
+project.lock.json
 
 # NuGet Packages
 *.nupkg
+*.snupkg
 **/packages/*
 
-# Cake
-[Tt]ools/
-.vs
+## Cake / Cake.Recipe artifacts
 
-*.DotSettings.user
+# Cake bootstrap directory
+[Tt]ools/
+
+# Cake.Recipe build output
+BuildArtifacts/
+
+# Cake / language-service cache artifacts (created by `dotnet build`)
+*.lscache
+
+## OS
+
+.DS_Store
+Thumbs.db
