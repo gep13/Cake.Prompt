@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Cake.Core;
 using Cake.Core.Annotations;
@@ -69,21 +68,28 @@ namespace Cake.Common.IO
             if (timeout <= TimeSpan.Zero)
                 throw new ArgumentOutOfRangeException(nameof(timeout), "timeout must be greater than zero");
 
-            var cts = new CancellationTokenSource(timeout);
-
-            try
+            // Console.ReadLine() is a blocking synchronous call that ignores
+            // CancellationToken — it returns only when the user presses Enter
+            // or stdin is closed. To honour the timeout we race the read
+            // against Task.Delay(timeout) via Task.WhenAny. If the delay wins
+            // the read task is orphaned and continues blocking in the
+            // background until the user presses Enter or the process exits;
+            // that is unavoidable without P/Invoke or a Console.KeyAvailable
+            // polling loop, and is acceptable for a CI/build-script context.
+            var readTask = Task.Run(() =>
             {
-                return Task.Run(() =>
-                {
-                    Console.Write(string.IsNullOrEmpty(defaultResult) ? message : $"{message} [{defaultResult}]");
-                    var readLine = Console.ReadLine();
-                    return string.IsNullOrEmpty(readLine) ? defaultResult : readLine;
-                }, cts.Token).GetAwaiter().GetResult();
-            }
-            catch (OperationCanceledException)
+                Console.Write(string.IsNullOrEmpty(defaultResult) ? message : $"{message} [{defaultResult}]");
+                var readLine = Console.ReadLine();
+                return string.IsNullOrEmpty(readLine) ? defaultResult : readLine;
+            });
+
+            var winner = Task.WhenAny(readTask, Task.Delay(timeout)).GetAwaiter().GetResult();
+            if (winner != readTask)
             {
                 throw new TimeoutException($"Prompt timed out after {timeout:g}.");
             }
+
+            return readTask.GetAwaiter().GetResult();
         }
     }
 }
